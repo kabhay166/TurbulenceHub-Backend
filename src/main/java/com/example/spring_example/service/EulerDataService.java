@@ -1,0 +1,28 @@
+package com.example.spring_example.service;
+
+import com.example.spring_example.entity.data.EulerData;
+import com.example.spring_example.repository.data.EulerDataRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class EulerDataService {
+
+    @Autowired
+    public EulerDataRepository eulerDataRepository;
+
+    public EulerDataService(EulerDataRepository eulerDataRepository) {
+        this.eulerDataRepository = eulerDataRepository;
+    }
+
+    public List<EulerData> getAll() {
+        return eulerDataRepository.findAll();
+    }
+
+    public Optional<EulerData> getById(Long id) {
+        return eulerDataRepository.findById(id);
+    }
+}

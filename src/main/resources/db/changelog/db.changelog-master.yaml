@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: abhay
+      changes:
+        - createTable:
+            tableName: todo_item
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: task
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completion
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
