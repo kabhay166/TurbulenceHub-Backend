@@ -1,4 +1,4 @@
-package com.example.spring_example.service;
+package com.example.spring_example.service.run;
 
 import com.example.spring_example.repository.run.BasicRunRepository;
 import org.springframework.stereotype.Service;

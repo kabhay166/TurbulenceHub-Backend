@@ -16,15 +16,15 @@ import java.util.List;
 
 @Getter
 @Setter
-public class HydroPara extends BasicPara {
+public class MhdPara extends BasicPara {
 
-    private String kind = "HYDRO";
+    private String kind = "MHD";
 
-    public HydroPara(String device, int device_rank, int dimension, int Nx, int Ny, int Nz, double nu, double eta, String time_scheme, double t_initial, double t_final, double dt) {
+    public MhdPara(String device, int device_rank, int dimension, int Nx, int Ny, int Nz, double nu, double eta, String time_scheme, double t_initial, double t_final, double dt) {
         super(device, device_rank, dimension, Nx, Ny, Nz, nu, eta, time_scheme, t_initial, t_final, dt);
     }
 
-    public HydroPara() {
+    public MhdPara() {
         super();
     }
 

@@ -1,4 +1,4 @@
-package com.example.spring_example.service;
+package com.example.spring_example.service.data;
 
 import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.repository.data.EulerDataRepository;
