@@ -19,7 +19,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(processWebSocketHandler, "/ws/run-exe")
+        registry.addHandler(processWebSocketHandler, "/ws/tarang-demo")
                 .setAllowedOrigins("*");
     }
 }
