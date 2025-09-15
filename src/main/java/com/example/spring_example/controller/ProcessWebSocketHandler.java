@@ -88,16 +88,18 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     }
 
     public void handleRun() throws IOException {
+        System.out.println("Inside handle run");
         try {
 
             if(kind.equals("HYDRO")) {
+                System.out.println("Creating hydro para file");
                 createHydroParaFile();
             } else if(kind.equals("MHD")) {
                 createMhdParaFile();
             }
 
             ProcessBuilder builder = new ProcessBuilder("C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\Tarang CLI\\myvenv\\Scripts\\python.exe",
-                    "C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\TurbulenceHUB\\backend\\Tarang\\tarang_cli.py");
+                    "C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\TurbulenceHUB\\backend\\Tarang\\tarang_gui.py");
             builder.redirectErrorStream(true);
             currentProcess = builder.start();
             running = true;
@@ -122,23 +124,24 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     }
 
     public void createHydroParaFile() {
-        HydroPara hydroPara = new HydroPara();
-        hydroPara.setDevice( (String) payloadObject.get("device"));
-        hydroPara.setDevice_rank(Integer.parseInt(payloadObject.get("device_rank").toString()));
-        hydroPara.setDimension(Integer.parseInt(payloadObject.get("dimension").toString()));
-        hydroPara.setNx(Integer.parseInt(payloadObject.get("Nx").toString()));
-        hydroPara.setNy(Integer.parseInt(payloadObject.get("Ny").toString()));
-        hydroPara.setNz(Integer.parseInt(payloadObject.get("Nz").toString()));
-        hydroPara.setNu(Double.parseDouble(payloadObject.get("nu").toString()));
-        hydroPara.setEta(Double.parseDouble(payloadObject.get("eta").toString()));
-        hydroPara.setTime_scheme((String) payloadObject.get("time_scheme"));
-        hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
-        hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
-        hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-        hydroRunService.createNewRun(hydroPara);
+
 
         System.out.println("Trying to create para file");
         try {
+            HydroPara hydroPara = new HydroPara();
+            hydroPara.setDevice( (String) payloadObject.get("device"));
+            hydroPara.setDevice_rank(Integer.parseInt(payloadObject.get("device_rank").toString()));
+            hydroPara.setDimension(Integer.parseInt(payloadObject.get("dimension").toString()));
+            hydroPara.setNx(Integer.parseInt(payloadObject.get("Nx").toString()));
+            hydroPara.setNy(Integer.parseInt(payloadObject.get("Ny").toString()));
+            hydroPara.setNz(Integer.parseInt(payloadObject.get("Nz").toString()));
+            hydroPara.setNu(Double.parseDouble(payloadObject.get("nu").toString()));
+            hydroPara.setEta(Double.parseDouble(payloadObject.get("eta").toString()));
+            hydroPara.setTime_scheme((String) payloadObject.get("time_scheme"));
+            hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
+            hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
+            hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
+            hydroRunService.createNewRun(hydroPara);
             hydroPara.createParaFile(currentSession.getId());
         } catch (Exception e) {
             System.out.print("Error creating para file: " + e.getMessage());
