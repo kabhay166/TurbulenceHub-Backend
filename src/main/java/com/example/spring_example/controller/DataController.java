@@ -73,8 +73,8 @@ public class DataController {
             }
         }
 
+        downloadPath += "/TurbulenceData.zip";
 
-        System.out.println("Inside download data function");
         File file = new File(downloadPath);
 
         if(!file.exists()) {
