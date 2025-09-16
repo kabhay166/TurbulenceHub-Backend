@@ -1,4 +1,5 @@
 package com.example.spring_example.controller;
+import com.example.spring_example.entity.data.BaseData;
 import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.entity.data.HydroData;
 import com.example.spring_example.entity.data.MhdData;
@@ -54,14 +55,27 @@ public class DataController {
 
     @GetMapping("/download/{model}/{id}")
     public ResponseEntity<Resource> downloadData(@PathVariable String model, @PathVariable Long id, @RequestHeader(value=HttpHeaders.RANGE, required = false) String rangeHeader) throws IOException {
-
-        if(model.equals("Euler")) {
+        String downloadPath = "";
+        if(model.equalsIgnoreCase ("Euler")) {
             Optional<EulerData> eulerData = eulerDataService.getById(id);
+            if(eulerData.isPresent()) {
+                downloadPath = eulerData.get().getDownloadPath();
+            }
+        } else if(model.equalsIgnoreCase("Hydro")) {
+            Optional<HydroData> hydroData = hydroDataService.getById(id);
+            if(hydroData.isPresent()) {
+                downloadPath = hydroData.get().getDownloadPath();
+            }
+        } else if(model.equalsIgnoreCase("MHD")) {
+            Optional<MhdData> mhdData = mhdDataService.getById(id);
+            if(mhdData.isPresent()) {
+                downloadPath = mhdData.get().getDownloadPath();
+            }
         }
 
 
         System.out.println("Inside download data function");
-        File file = new File("E:\\Clair-Obscur-Exp-33-SteamRIP.com.rar");
+        File file = new File(downloadPath);
 
         if(!file.exists()) {
             return ResponseEntity.notFound().build();
