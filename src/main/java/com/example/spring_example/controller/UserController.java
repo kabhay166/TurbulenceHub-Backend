@@ -3,20 +3,26 @@ package com.example.spring_example.controller;
 import com.example.spring_example.dto.request.UserSignupRequestDto;
 import com.example.spring_example.dto.response.UserResponseDto;
 import com.example.spring_example.entity.AppUser;
+import com.example.spring_example.entity.VerificationToken;
+import com.example.spring_example.repository.VerificationTokenRepository;
 import com.example.spring_example.security.CustomUserDetailsService;
 import com.example.spring_example.security.JwtUtil;
+import com.example.spring_example.service.EmailService;
 import com.example.spring_example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,6 +45,12 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
@@ -57,6 +69,23 @@ public class UserController {
         String username = userLoginDetails.get("username");
         String password = userLoginDetails.get("password");
 
+        Optional<AppUser> user = userService.findByUsername(username);
+
+        if(user.isPresent()) {
+            if(!user.get().isVerified()) {
+                Optional<VerificationToken> token = tokenRepository.findByUser(user.get());
+                if(token.isPresent()) {
+                    if(!token.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+                        tokenRepository.delete(token.get());
+                    }
+
+                    VerificationToken newToken = new VerificationToken(user.get());
+                    emailService.sendVerificationEmail(user.get().getEmail(),newToken.getToken());
+
+                }
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Please Verify your email first. A verification link has been sent to your mail."));
+            }
+        }
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username,password)
@@ -98,11 +127,38 @@ public class UserController {
         password = passwordEncoder.encode(password);
         userSignupDetails.setPassword(password);
         Boolean userCreated = userService.createUser(userSignupDetails);
+        Optional<AppUser>  user = userService.findByUsername(username);
 
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Error creating the user."));
+        }
 
+        VerificationToken verificationToken = new VerificationToken(user.get());
+        tokenRepository.save(verificationToken);
 
-
+        emailService.sendVerificationEmail(email,verificationToken.getToken());
         UserResponseDto userSignupResponseDto = new UserResponseDto(username,email,"","");
+
         return new ResponseEntity<>(userSignupResponseDto, HttpStatus.CREATED);
+    }
+
+
+    @GetMapping("/signup/verify")
+    public ResponseEntity<String> verifyUserEmail(@RequestParam String token) {
+        Optional<VerificationToken> verificationToken = tokenRepository.findByToken(token);
+
+        if(verificationToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid verification link.");
+        }
+
+        if(verificationToken.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body("Verification link has expired");
+        }
+
+        AppUser user = verificationToken.get().getUser();
+        user.setVerified(true);
+        userService.updateUser(user);
+        tokenRepository.delete(verificationToken.get());
+        return ResponseEntity.badRequest().body("Your mail has been verified!. You can now log in.");
     }
 }

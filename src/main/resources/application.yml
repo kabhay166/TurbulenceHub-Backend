@@ -1,3 +1,17 @@
 spring:
   profiles:
     active: dev
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: vayusoftlabs@gmail.com
+    password: eqbd rmhv emzl puhl
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+      protocol: smtp

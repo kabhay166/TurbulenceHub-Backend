@@ -29,9 +29,12 @@ public class AppUser extends BasicEntity {
     private ZonedDateTime lastPasswordResetDate;
     private boolean isLicensed;
     private List<String> roles = new ArrayList<>(List.of("USER"));
+    private boolean isVerified = false;
+
     @OneToMany
     private List<HydroRun> hydroRuns;
 
     @OneToMany
     private List<MhdRun> mhdRuns;
+
 }
