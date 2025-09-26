@@ -1,6 +1,6 @@
 package com.example.spring_example.entity.data;
 
-import com.example.spring_example.entity.User;
+import com.example.spring_example.entity.AppUser;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,6 +30,6 @@ public class BaseData {
     private String downloadPath;
     private String description;
     @ManyToOne
-    private User uploadedBy;
+    private AppUser uploadedBy;
     private ZonedDateTime uploadedAt;
 }

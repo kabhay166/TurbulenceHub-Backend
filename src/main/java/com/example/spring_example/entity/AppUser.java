@@ -9,7 +9,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.lang.reflect.Array;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -18,14 +21,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "app_user")
-public class User extends BasicEntity {
+public class AppUser extends BasicEntity {
 
     private String username;
     private String password;
     private String email;
     private ZonedDateTime lastPasswordResetDate;
     private boolean isLicensed;
-
+    private List<String> roles = new ArrayList<>(List.of("USER"));
     @OneToMany
     private List<HydroRun> hydroRuns;
 

@@ -19,7 +19,7 @@ public class MhdRunService {
     public void createNewRun(MhdPara mhdPara) {
         MhdRun mhdRun = new MhdRun();
         MhdRunMapper.convertMhdParaToMhdRun(mhdPara,mhdRun);
-        mhdRun.setUser(null);
+        mhdRun.setAppUser(null);
         mhdRun.setCompleted(false);
         mhdRun.setTimeOfRun(LocalDateTime.now());
         mhdRunRepository.save(mhdRun);

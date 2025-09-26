@@ -19,7 +19,7 @@ public class HydroRunService {
     public void createNewRun(HydroPara hydroPara) {
         HydroRun hydroRun = new HydroRun();
         HydroRunMapper.convertHydroParaToHydroRun(hydroPara,hydroRun);
-        hydroRun.setUser(null);
+        hydroRun.setAppUser(null);
         hydroRun.setCompleted(false);
         hydroRun.setTimeOfRun(LocalDateTime.now());
         hydroRunRepository.save(hydroRun);

@@ -1,6 +1,6 @@
 package com.example.spring_example.entity.run;
 
-import com.example.spring_example.entity.User;
+import com.example.spring_example.entity.AppUser;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MhdRun extends BasicRun {
     @ManyToOne
-    private User user;
+    private AppUser appUser;
     private Boolean completed;
     private LocalDateTime timeOfRun;
     private Boolean wasStopped;
