@@ -1,5 +1,6 @@
 package com.example.spring_example.controller;
 
+import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.models.MhdPara;
 import com.example.spring_example.service.run.HydroRunService;
@@ -98,8 +99,10 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
                 createMhdParaFile();
             }
 
-            ProcessBuilder builder = new ProcessBuilder("C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\Tarang CLI\\myvenv\\Scripts\\python.exe",
-                    "C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\TurbulenceHUB\\backend\\Tarang\\tarang_gui.py");
+            ProcessBuilder builder = new ProcessBuilder(
+                    SimulationConfig.getPythonPath(),
+                    SimulationConfig.getScriptPath()
+            );
             builder.redirectErrorStream(true);
             currentProcess = builder.start();
             running = true;
