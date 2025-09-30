@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +31,8 @@ public class AppUser extends BasicEntity {
     private boolean isLicensed;
     private List<String> roles = new ArrayList<>(List.of("USER"));
     private boolean isVerified = false;
+    private String otp;
+    private LocalDateTime otpExpiryDate;
 
     @OneToMany
     private List<HydroRun> hydroRuns;

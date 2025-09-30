@@ -19,4 +19,5 @@ public class UserResponseDto {
     @NotBlank
     public String token;
     public String error;
+    public boolean showOTPPage;
 }

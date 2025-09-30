@@ -6,8 +6,10 @@ import com.example.spring_example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class UserService {
@@ -45,4 +47,28 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+
+    public String generateOTP(AppUser user) {
+        Random random = new Random();
+        String otp = String.valueOf(100000 + random.nextInt(900000));
+        user.setOtp(otp);
+        user.setOtpExpiryDate(LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+        return otp;
+    }
+
+    public boolean verifyOTP(AppUser user,String otp) {
+        if(user.getOtpExpiryDate().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+
+        String storedOtp = user.getOtp();
+        if(storedOtp.equals(otp)) {
+            user.setOtp(null);
+            user.setOtpExpiryDate(null);
+            return true;
+        }
+
+        return false;
+    }
 }

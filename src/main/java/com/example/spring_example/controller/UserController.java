@@ -65,37 +65,69 @@ public class UserController {
     public ResponseEntity<UserResponseDto> postUserLogin(@RequestBody Map<String,String> userLoginDetails) {
         String username = userLoginDetails.get("username");
         String password = userLoginDetails.get("password");
+        String incomingOtp = userLoginDetails.get("otp");
 
         Optional<AppUser> user = userService.findByUsername(username);
 
-        if(user.isPresent()) {
-            if(!user.get().isVerified()) {
-                Optional<VerificationToken> token = tokenRepository.findByUser(user.get());
-                if(token.isPresent()) {
-                    if(!token.get().getExpiryDate().isBefore(LocalDateTime.now())) {
-                        tokenRepository.delete(token.get());
-                    }
 
-                    VerificationToken newToken = new VerificationToken(user.get());
-                    emailService.sendVerificationEmail(user.get().getEmail(),newToken.getToken());
 
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect credentials provided. No user with username: " + username,false));
+        }
+
+        if (!user.get().isVerified()) {
+            Optional<VerificationToken> token = tokenRepository.findByUser(user.get());
+            if (token.isPresent()) {
+                if (!token.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+                    tokenRepository.delete(token.get());
                 }
-                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Please Verify your email first. A verification link has been sent to your mail."));
+
+                VerificationToken newToken = new VerificationToken(user.get());
+                emailService.sendVerificationEmail(user.get().getEmail(), newToken.getToken());
+
+            }
+
+            return ResponseEntity.badRequest().body(new UserResponseDto("", "", "", "Please Verify your email first. A verification link has been sent to your mail.",false));
+        }
+
+        if(incomingOtp == null) {
+            try {
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(username,password)
+                );
+                UserResponseDto userResponseDto = new UserResponseDto(username,"","","",true);
+                String otp = userService.generateOTP(user.get());
+                emailService.sendOTPMail(user.get().getEmail(),otp);
+                return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
+            } catch(Exception e) {
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Unexpected Error occured",false));
+            }
+
+        } else {
+            boolean isOTPCorrect =  userService.verifyOTP(user.get(),incomingOtp);
+
+            if(isOTPCorrect) {
+                try {
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(username,password)
+                    );
+                    String token = jwtUtil.generateToken(username);
+                    UserResponseDto userResponseDto = new UserResponseDto(username,"",token,"",false);
+                    return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
+                } catch(Exception e) {
+                    return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect credentials provided.",false));
+                }
+            } else {
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect otp or expired",true));
+
             }
         }
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username,password)
-            );
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            String token = jwtUtil.generateToken(username);
-            UserResponseDto userResponseDto = new UserResponseDto(username,"",token,"");
-            return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
-        } catch(Exception e) {
-            return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect credentials provided" + username));
-        }
+
+
 
     }
+
+
 
     @ResponseBody
     @PostMapping("/signup")
@@ -106,18 +138,18 @@ public class UserController {
         String password = userSignupDetails.getPassword();
         String confirmPassword = userSignupDetails.getConfirmPassword();
         if(!password.equals(confirmPassword)) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","The passwords do not match"));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","The passwords do not match",false));
         }
 
         Optional<AppUser> existingUser = userService.findByUsername(username);
 
         if(existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Username " + username + " is already taken."));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Username " + username + " is already taken.",false));
         }
 
         existingUser = userService.findByEmail(email);
         if(existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","User with email: " + email + " already exists."));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","User with email: " + email + " already exists.",false));
         }
 
 
@@ -127,14 +159,14 @@ public class UserController {
         Optional<AppUser>  user = userService.findByUsername(username);
 
         if(user.isEmpty()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Error creating the user."));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Error creating the user.",false));
         }
 
         VerificationToken verificationToken = new VerificationToken(user.get());
         tokenRepository.save(verificationToken);
 
         emailService.sendVerificationEmail(email,verificationToken.getToken());
-        UserResponseDto userSignupResponseDto = new UserResponseDto(username,email,"","");
+        UserResponseDto userSignupResponseDto = new UserResponseDto(username,email,"","",false);
 
         return new ResponseEntity<>(userSignupResponseDto, HttpStatus.CREATED);
     }

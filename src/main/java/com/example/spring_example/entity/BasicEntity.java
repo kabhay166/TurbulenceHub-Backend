@@ -19,7 +19,7 @@ public class BasicEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+    private Long id;
     private ZonedDateTime createdDate;
     private ZonedDateTime updatedDate;
 }
