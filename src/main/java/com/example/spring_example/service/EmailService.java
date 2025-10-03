@@ -37,4 +37,17 @@ public class EmailService {
         otpMail.setText(message);
         mailSender.send(otpMail);
     }
+
+    @Async
+    public void sendPasswordResetEmail(String to, String token) {
+        String subject = "Password reset for turbulencehub";
+        String passwordResetUrl = AppConfig.getPasswordResetUrl() + token;
+        String message = "Click on the below link to reset your password:\n" + passwordResetUrl;
+        SimpleMailMessage passwordRestMail = new SimpleMailMessage();
+        passwordRestMail.setFrom(AppConfig.getCompanyEmail());
+        passwordRestMail.setTo(to);
+        passwordRestMail.setSubject(subject);
+        passwordRestMail.setText(message);
+        mailSender.send(passwordRestMail);
+    }
 }

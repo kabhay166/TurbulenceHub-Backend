@@ -3,7 +3,9 @@ package com.example.spring_example.controller;
 import com.example.spring_example.dto.request.UserSignupRequestDto;
 import com.example.spring_example.dto.response.UserResponseDto;
 import com.example.spring_example.entity.AppUser;
+import com.example.spring_example.entity.PasswordResetToken;
 import com.example.spring_example.entity.VerificationToken;
+import com.example.spring_example.repository.PasswordResetTokenRepository;
 import com.example.spring_example.repository.VerificationTokenRepository;
 import com.example.spring_example.security.CustomUserDetailsService;
 import com.example.spring_example.security.JwtUtil;
@@ -14,12 +16,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,6 +48,9 @@ public class UserController {
 
     @Autowired
     private VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordRestTokenRepository;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -100,7 +105,7 @@ public class UserController {
                 emailService.sendOTPMail(user.get().getEmail(),otp);
                 return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
             } catch(Exception e) {
-                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Unexpected Error occured",false));
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Invalid Credentials provided",false));
             }
 
         } else {
@@ -188,6 +193,85 @@ public class UserController {
         user.setVerified(true);
         userService.updateUser(user);
         tokenRepository.delete(verificationToken.get());
-        return ResponseEntity.badRequest().body("Your mail has been verified!. You can now log in.");
+        return ResponseEntity.ok().body("Your mail has been verified!. You can now log in.");
+    }
+
+    @GetMapping("/reset-password")
+    public String getResetPassword() {
+        return "forward:/index.html";
+    }
+
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String,Object>> resetPassword(@RequestBody Map<String,String> passwordResetRequestBody) {
+        Map<String,Object> responseKvp = new HashMap<>();
+        responseKvp.put("success",false);
+        responseKvp.put("error","Internal server error");
+        String email = passwordResetRequestBody.get("email");
+
+
+        if(email != null) {
+            Optional<AppUser> user = userService.findByEmail(email);
+
+            if(user.isEmpty()) {
+                responseKvp.put("error","The user with this email does not exist.");
+                return ResponseEntity.badRequest().body(responseKvp);
+            }
+
+            Optional<PasswordResetToken> existingToken = passwordRestTokenRepository.findByUser(user.get());
+
+            existingToken.ifPresent(passwordResetToken -> passwordRestTokenRepository.delete(passwordResetToken));
+
+            PasswordResetToken newPasswordResetToken = new PasswordResetToken(user.get());
+
+            passwordRestTokenRepository.save(newPasswordResetToken);
+            String token = newPasswordResetToken.getToken();
+
+            emailService.sendPasswordResetEmail(user.get().getEmail(),token);
+
+            responseKvp.put("success",true);
+            responseKvp.put("error","");
+            return ResponseEntity.ok().body(responseKvp);
+        } else {
+            String token = passwordResetRequestBody.get("token");
+            String password = passwordResetRequestBody.get("password");
+            String confirmPassword = passwordResetRequestBody.get("confirmPassword");
+
+            if(token == null || password == null || confirmPassword == null || token.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                responseKvp.put("success",false);
+                responseKvp.put("error","Some values are empty");
+                return ResponseEntity.badRequest().body(responseKvp);
+            }
+
+            if(!password.equals(confirmPassword)) {
+                responseKvp.put("success",false);
+                responseKvp.put("error","The passwords do not match");
+                return ResponseEntity.badRequest().body(responseKvp);
+            }
+
+
+            Optional<PasswordResetToken> resetToken = passwordRestTokenRepository.findByToken(token);
+            if(resetToken.isEmpty()) {
+                responseKvp.put("success",false);
+                responseKvp.put("error","An error occurred.");
+                return ResponseEntity.badRequest().body(responseKvp);
+            }
+
+            if(resetToken.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+                responseKvp.put("success",false);
+                responseKvp.put("error","The reset password link is expired.");
+                return ResponseEntity.badRequest().body(responseKvp);
+            }
+
+            AppUser user = resetToken.get().getUser();
+            user.setPassword(passwordEncoder.encode(password));
+            passwordRestTokenRepository.delete(resetToken.get());
+            responseKvp.put("success",true);
+            responseKvp.put("error","");
+            return ResponseEntity.ok().body(responseKvp);
+
+        }
+
+
     }
 }

@@ -7,14 +7,19 @@ public class AppConfig {
     );
 
     public static String getVerificationUrl() {
-        switch (PROFILE) {
-            case DEV:
-                return "http://localhost:8081/user/signup/verify?token=";
-            case PROD:
-                return "https://turbulencehub.in/user/signup/verify?token=";
-            default:
-                throw new IllegalStateException("Unknown profile: " + PROFILE);
-        }
+        return switch (PROFILE) {
+            case DEV -> "http://localhost:8081/user/signup/verify?token=";
+            case PROD -> "https://turbulencehub.in/user/signup/verify?token=";
+            default -> throw new IllegalStateException("Unknown profile: " + PROFILE);
+        };
+    }
+
+    public static String getPasswordResetUrl() {
+        return switch (PROFILE) {
+            case DEV -> "http://localhost:5173/user/reset-password?token=";
+            case PROD -> "https://turbulencehub.in/user/reset-password?token=";
+            default -> throw new IllegalStateException("Unknown profile: " + PROFILE);
+        };
     }
 
     public static String getCompanyEmail() {
