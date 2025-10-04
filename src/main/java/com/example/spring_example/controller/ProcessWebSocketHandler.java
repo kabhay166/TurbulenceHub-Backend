@@ -3,6 +3,7 @@ package com.example.spring_example.controller;
 import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.models.MhdPara;
+import com.example.spring_example.security.JwtUtil;
 import com.example.spring_example.service.run.HydroRunService;
 import com.example.spring_example.service.run.MhdRunService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,9 +34,16 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     MhdRunService mhdRunService;
 
+    @Autowired
+    JwtUtil jwtUtil;
+
+    String jwtToken = "";
+    private boolean sessionAuthenticated = false;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         System.out.println("WebSocket connection established");
+        jwtToken = "";
     }
 
     @Override
@@ -44,9 +53,21 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
         System.out.println(payload);
         ObjectMapper mapper = new ObjectMapper();
 
-        if("stop".equals(payload.trim())){
+        if("Token:".equals(payload.trim().substring(0,6))) {
+            System.out.println("Token received.");
+            jwtToken = payload.trim().substring(6);
+            if(jwtToken.equals("null") || jwtToken.isEmpty()) {
+                currentSession.sendMessage(new TextMessage("The token is invalid"));
+                currentSession.close();
+            }
+            handleRunWithUser();
+        }
+        else if("stop".equals(payload.trim())){
             stopRun(currentSession);
         } else {
+            if(!sessionAuthenticated) {
+                currentSession.sendMessage(new TextMessage("You are not logged in. Please log in to continue."));
+            }
             try {
 
                 payloadObject = mapper.readValue(payload,new TypeReference<Map<String,Object>>() {});
@@ -174,6 +195,27 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
         } catch (Exception e) {
             System.out.print("Error creating para file: " + e.getMessage());
         }
+    }
+
+    public void handleRunWithUser() throws IOException {
+
+        try {
+            if(!jwtUtil.validateToken(jwtToken)) {
+                currentSession.sendMessage(new TextMessage("You are not logged in. Please log in to continue."));
+                currentSession.close();
+            }
+
+            sessionAuthenticated = true;
+
+            String username = jwtUtil.extractUsername(jwtToken);
+            System.out.println();
+            currentSession.sendMessage( new TextMessage("Username is: " + username));
+
+        } catch(Exception e) {
+            currentSession.sendMessage(new TextMessage("You are not logged in. Please log in to continue."));
+            currentSession.close();
+        }
+
     }
 }
 
