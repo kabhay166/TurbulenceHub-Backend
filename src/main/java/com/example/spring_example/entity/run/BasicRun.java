@@ -11,8 +11,10 @@ import lombok.Setter;
 @MappedSuperclass
 @Getter
 @Setter
-public class BasicRun extends BasicEntity {
-
+public class BasicRun {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     @NotNull
     private String device;
     @NotNull

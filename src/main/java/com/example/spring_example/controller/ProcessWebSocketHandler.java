@@ -108,6 +108,10 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     }
 
     public void stopRun(WebSocketSession session) throws InterruptedException, IOException {
+        if(!running) {
+            return;
+        }
+
         session.sendMessage(new TextMessage("Process has been stopped"));
         session.close();
         if(currentProcess != null && currentProcess.isAlive()) {
@@ -122,6 +126,7 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
             System.out.print("Process stopped by the client");
 
         }
+
     }
 
     public void handleRun() throws IOException {
@@ -247,7 +252,8 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     }
 
 
-    private void markRunCompleted() {
+    private void markRunCompleted() throws IOException {
+        running = false;
         if(currentRunId == -1L) {
             return;
         }
@@ -256,6 +262,8 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
         } else if(kind.equalsIgnoreCase("mhd")) {
             mhdRunService.markRunCompleted(currentRunId);
         }
+        currentSession.close();
+
     }
 
 

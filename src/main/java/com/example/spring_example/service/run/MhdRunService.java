@@ -31,7 +31,6 @@ public class MhdRunService {
         mhdRun.setAppUser(user.get());
         mhdRun.setCompleted(false);
         mhdRun.setTimeOfRun(ZonedDateTime.now());
-        mhdRun.setCreatedDate(ZonedDateTime.now());
         mhdRunRepository.save(mhdRun);
         user.get().addMhdRun(mhdRun);
         userRepository.save(user.get());
