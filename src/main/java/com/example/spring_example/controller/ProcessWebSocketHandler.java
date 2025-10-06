@@ -1,9 +1,11 @@
 package com.example.spring_example.controller;
 
 import com.example.spring_example.config.SimulationConfig;
+import com.example.spring_example.entity.AppUser;
 import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.models.MhdPara;
 import com.example.spring_example.security.JwtUtil;
+import com.example.spring_example.service.UserService;
 import com.example.spring_example.service.run.HydroRunService;
 import com.example.spring_example.service.run.MhdRunService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,8 +17,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.*;
-import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,36 +39,49 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     @Autowired
     JwtUtil jwtUtil;
 
+    @Autowired
+    UserService userService;
+
     String jwtToken = "";
     private boolean sessionAuthenticated = false;
+
+    String currentUserName;
+
+    Long currentRunId = -1L;
+
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         System.out.println("WebSocket connection established");
         jwtToken = "";
+        currentSession = session;
+
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        currentSession = session;
         String payload = message.getPayload();
         System.out.println(payload);
         ObjectMapper mapper = new ObjectMapper();
 
-        if("Token:".equals(payload.trim().substring(0,6))) {
+        if("stop".equals(payload.trim()))
+        {
+            stopRun(currentSession);
+            markRunStopped();
+
+        }
+        else if("Token:".equals(payload.trim().substring(0,6))) {
             System.out.println("Token received.");
             jwtToken = payload.trim().substring(6);
             if(jwtToken.equals("null") || jwtToken.isEmpty()) {
                 currentSession.sendMessage(new TextMessage("The token is invalid"));
                 currentSession.close();
             }
-            handleRunWithUser();
-        }
-        else if("stop".equals(payload.trim())){
-            stopRun(currentSession);
+            validateUser();
         } else {
             if(!sessionAuthenticated) {
                 currentSession.sendMessage(new TextMessage("You are not logged in. Please log in to continue."));
+                currentSession.close();
             }
             try {
 
@@ -133,6 +148,9 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
                     String line;
                     while( running && (line = reader.readLine()) != null && currentSession.isOpen()) {
                         currentSession.sendMessage(new TextMessage(line));
+                        if(line.trim().equalsIgnoreCase("Done")){
+                            markRunCompleted();
+                        }
                     }
                 } catch (IOException e) {
                     try {
@@ -165,7 +183,11 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
             hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
             hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
             hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-            hydroRunService.createNewRun(hydroPara);
+            currentRunId = hydroRunService.createNewRun(hydroPara,currentUserName);
+            if(currentRunId == -1) {
+                currentSession.sendMessage(new TextMessage("An error occurred."));
+                currentSession.close();
+            }
             hydroPara.createParaFile(currentSession.getId());
         } catch (Exception e) {
             System.out.print("Error creating para file: " + e.getMessage());
@@ -173,7 +195,7 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
     }
 
 
-    public void createMhdParaFile() {
+    public void createMhdParaFile() throws IOException {
         MhdPara mhdPara = new MhdPara();
         mhdPara.setDevice( (String) payloadObject.get("device"));
         mhdPara.setDevice_rank(Integer.parseInt(payloadObject.get("device_rank").toString()));
@@ -187,8 +209,11 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
         mhdPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
         mhdPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
         mhdPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-        mhdRunService.createNewRun(mhdPara);
-
+        currentRunId =  mhdRunService.createNewRun(mhdPara,currentUserName);
+        if(currentRunId == -1) {
+            currentSession.sendMessage(new TextMessage("An error occurred."));
+            currentSession.close();
+        }
         System.out.println("Trying to create para file");
         try {
             mhdPara.createParaFile(currentSession.getId());
@@ -197,7 +222,7 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    public void handleRunWithUser() throws IOException {
+    public void validateUser() throws IOException {
 
         try {
             if(!jwtUtil.validateToken(jwtToken)) {
@@ -207,15 +232,43 @@ public class ProcessWebSocketHandler extends TextWebSocketHandler {
 
             sessionAuthenticated = true;
 
-            String username = jwtUtil.extractUsername(jwtToken);
-            System.out.println();
-            currentSession.sendMessage( new TextMessage("Username is: " + username));
+            currentUserName = jwtUtil.extractUsername(jwtToken);
+            Optional<AppUser> user = userService.findByUsername(currentUserName);
+            if(user.isEmpty()) {
+                currentSession.sendMessage(new TextMessage("No user found with this username: " + currentUserName));
+                currentSession.close();
+            }
 
         } catch(Exception e) {
             currentSession.sendMessage(new TextMessage("You are not logged in. Please log in to continue."));
             currentSession.close();
         }
 
+    }
+
+
+    private void markRunCompleted() {
+        if(currentRunId == -1L) {
+            return;
+        }
+        if(kind.equalsIgnoreCase("hydro")) {
+            hydroRunService.markRunCompleted(currentRunId);
+        } else if(kind.equalsIgnoreCase("mhd")) {
+            mhdRunService.markRunCompleted(currentRunId);
+        }
+    }
+
+
+    private void markRunStopped() {
+        if(currentRunId == -1L) {
+            return;
+        }
+
+        if(kind.equalsIgnoreCase("hydro")) {
+            hydroRunService.markRunStopped(currentRunId);
+        } else if(kind.equalsIgnoreCase("mhd")) {
+            mhdRunService.markRunStopped(currentRunId);
+        }
     }
 }
 

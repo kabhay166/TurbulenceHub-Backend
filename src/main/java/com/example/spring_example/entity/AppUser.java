@@ -34,10 +34,31 @@ public class AppUser extends BasicEntity {
     private String otp;
     private LocalDateTime otpExpiryDate;
 
-    @OneToMany
+    @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HydroRun> hydroRuns;
 
-    @OneToMany
+    @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MhdRun> mhdRuns;
+
+    public void addHydroRun(HydroRun run) {
+        hydroRuns.add(run);
+        run.setAppUser(this);
+    }
+
+    public void removeHydroRun(HydroRun run) {
+        hydroRuns.remove(run);
+        run.setAppUser(null);
+    }
+
+    public void addMhdRun(MhdRun run) {
+        mhdRuns.add(run);
+        run.setAppUser(this);
+    }
+
+    public void removeMhdRun(MhdRun run) {
+        mhdRuns.remove(run);
+        run.setAppUser(null);
+    }
+
 
 }

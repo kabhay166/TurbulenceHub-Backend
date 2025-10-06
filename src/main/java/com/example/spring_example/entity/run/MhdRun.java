@@ -6,8 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Getter
@@ -16,10 +15,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MhdRun extends BasicRun {
     @ManyToOne
+    @JoinColumn(name = "app_user_id")
     private AppUser appUser;
     private Boolean completed;
-    private LocalDateTime timeOfRun;
+    private ZonedDateTime timeOfRun;
     private Boolean wasStopped;
-    private LocalDateTime timeOfCompletion;
+    private ZonedDateTime timeOfCompletion;
+    private ZonedDateTime timeOfStop;
 
 }
