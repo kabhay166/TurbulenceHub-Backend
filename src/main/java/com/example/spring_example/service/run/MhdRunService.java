@@ -9,6 +9,8 @@ import com.example.spring_example.repository.run.MhdRunRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -57,5 +59,9 @@ public class MhdRunService {
         run.get().setWasStopped(true);
         run.get().setTimeOfStop(ZonedDateTime.now());
         mhdRunRepository.save(run.get());
+    }
+
+    public List<MhdRun> getAllRunsByUser(Long userId) {
+        return mhdRunRepository.findAll().stream().filter(run -> Objects.equals(run.getAppUser().getId(), userId)).toList();
     }
 }

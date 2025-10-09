@@ -9,7 +9,10 @@ import com.example.spring_example.repository.run.HydroRunRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class HydroRunService {
@@ -57,5 +60,9 @@ public class HydroRunService {
         run.get().setWasStopped(true);
         run.get().setTimeOfStop(ZonedDateTime.now());
         hydroRunRepository.save(run.get());
+    }
+
+    public List<HydroRun> getAllRunsByUser(Long userId) {
+        return hydroRunRepository.findAll().stream().filter(run -> Objects.equals(run.getAppUser().getId(), userId)).toList();
     }
 }
