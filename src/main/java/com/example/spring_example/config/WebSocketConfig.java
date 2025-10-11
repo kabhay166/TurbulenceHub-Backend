@@ -1,6 +1,6 @@
 package com.example.spring_example.config;
 
-import com.example.spring_example.controller.ProcessWebSocketHandler;
+import com.example.spring_example.controller.WebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -11,15 +11,15 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final ProcessWebSocketHandler processWebSocketHandler;
+    private final WebSocketHandler webSocketHandler;
 
-    public WebSocketConfig(ProcessWebSocketHandler processWebSocketHandler) {
-        this.processWebSocketHandler = processWebSocketHandler;
+    public WebSocketConfig(WebSocketHandler webSocketHandler) {
+        this.webSocketHandler = webSocketHandler;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(processWebSocketHandler, "/ws/tarang-demo")
+        registry.addHandler(webSocketHandler, "/ws/tarang-demo")
                 .setAllowedOrigins("*");
     }
 }
