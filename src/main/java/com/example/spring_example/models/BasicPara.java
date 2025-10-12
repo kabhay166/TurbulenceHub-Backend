@@ -1,14 +1,12 @@
 package com.example.spring_example.models;
 
 
+import com.example.spring_example.config.AppConfig;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +16,7 @@ public class BasicPara {
     private String complex_dtype = "complex";
     private String real_dtype = "float64";
     private int dimension;
-    private String para_dir = "C:/Users/kabha/OneDrive/Desktop/Programming/Vayusoft_Labs/TurbulenceHUB/backend/Tarang";
+    private String para_dir = AppConfig.getBaseParaPath();
     private int Nx;
     private int Ny;
     private int Nz;
@@ -30,7 +28,7 @@ public class BasicPara {
     private double t_final;
     private double dt;
     private boolean FIXED_DT = true;
-    private String output_dir = Paths.get("C:/Users/kabha/OneDrive/Desktop/Programming/Vayusoft_Labs/TurbulenceHUB/backend/Tarang", getTimeStamp()).toString().replace("\\","/");
+    private String output_dir = Paths.get(AppConfig.getBaseOutputPath(),getTimeStamp()).toString().replace("\\","/");
     private boolean INPUT_SET_CASE = true;
     private String input_case = "custom";
     private boolean INPUT_FROM_FILE = false;
@@ -111,9 +109,11 @@ public class BasicPara {
 
     }
 
-    private String getTimeStamp() {
+
+
+    public static String getTimeStamp() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
         String timestamp = LocalDateTime.now().format(formatter);
-        return Paths.get("output", timestamp).toString();
+        return Paths.get("", timestamp).toString();
     }
 }

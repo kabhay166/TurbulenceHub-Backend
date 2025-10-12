@@ -1,17 +1,14 @@
 package com.example.spring_example.models;
 
+import com.example.spring_example.config.AppConfig;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+
 
 
 @Getter
@@ -31,10 +28,8 @@ public class MhdPara extends BasicPara {
 
     public boolean createParaFile(String id) {
 
-        final String basePath = "C:/Users/kabha/OneDrive/Desktop/Programming/Vayusoft_Labs/TurbulenceHUB/backend/Tarang/";
-
-        String paraFile = Paths.get(basePath,"para.py").toString();
-        System.out.println("Creating para file: " + paraFile);
+//        this.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),getTimeStamp()).toString().replace("\\","/"));
+        String paraFile = Paths.get(AppConfig.getBaseParaPath(),"para.py").toString();
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(paraFile,true))) {
 
             Class<?> current = this.getClass();
@@ -116,9 +111,4 @@ public class MhdPara extends BasicPara {
         return String.valueOf(value);  // Leave numbers as is
     }
 
-    private String getTimeStamp() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
-        String timestamp = LocalDateTime.now().format(formatter);
-        return Paths.get("output", timestamp).toString();
-    }
 }

@@ -26,4 +26,22 @@ public class AppConfig {
         return "vayusoftlabs@gmail.com";
     }
 
+    public static String getBaseOutputPath() {
+        return switch (PROFILE) {
+            case DEV -> "C:/Users/kabha/OneDrive/Desktop/Programming/Vayusoft_Labs/TurbulenceHUB/backend/Tarang/output";
+            case PROD -> "/home/vimal/Tarang/output";
+            default -> throw new IllegalStateException("Unknown profile: " + PROFILE);
+        };
+    }
+
+    public static String getBaseParaPath() {
+        return switch (PROFILE) {
+            case DEV -> "C:/Users/kabha/OneDrive/Desktop/Programming/Vayusoft_Labs/TurbulenceHUB/backend/Tarang";
+            case PROD -> "/home/vimal/Tarang/";
+            default -> throw new IllegalStateException("Unknown profile: " + PROFILE);
+        };
+    }
+
+
+
 }

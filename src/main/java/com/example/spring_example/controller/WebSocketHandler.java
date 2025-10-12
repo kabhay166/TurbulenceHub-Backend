@@ -1,5 +1,6 @@
 package com.example.spring_example.controller;
 
+import com.example.spring_example.config.AppConfig;
 import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.entity.AppUser;
 import com.example.spring_example.models.HydroPara;
@@ -17,6 +18,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
@@ -188,6 +190,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
             hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
             hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
+            hydroPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"Hydro Runs",HydroPara.getTimeStamp()).toString().replace("\\","/"));
             currentRunId = hydroRunService.createNewRun(hydroPara,currentUserName);
             if(currentRunId == -1) {
                 currentSession.sendMessage(new TextMessage("An error occurred."));
@@ -214,6 +217,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
         mhdPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
         mhdPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
         mhdPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
+        mhdPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"MHD Runs",MhdPara.getTimeStamp()).toString().replace("\\","/"));
+
         currentRunId =  mhdRunService.createNewRun(mhdPara,currentUserName);
         if(currentRunId == -1) {
             currentSession.sendMessage(new TextMessage("An error occurred."));
