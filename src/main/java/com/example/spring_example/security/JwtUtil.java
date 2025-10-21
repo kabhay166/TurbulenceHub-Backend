@@ -58,7 +58,7 @@ public class JwtUtil {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
-        Date expiryAt = new Date(now + TimeUnit.DAYS.toMillis(30));
+        Date expiryAt = new Date(now +  TimeUnit.MINUTES.toMillis(1)); //TimeUnit.DAYS.toMillis(1));
         return  Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
