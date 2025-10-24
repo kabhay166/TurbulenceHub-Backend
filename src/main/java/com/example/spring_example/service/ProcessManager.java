@@ -74,7 +74,6 @@ public class ProcessManager {
                     runProcessInfo.setCompleted(true);
                     markRunCompleted(runProcessInfo.getProcessInfoId());
                     processes.remove(runProcessInfo.getProcessInfoId());
-
                 }
             }
         } catch (IOException e) {
@@ -157,8 +156,8 @@ public class ProcessManager {
         }
     }
 
-    public List<RunProcessInfo> getAllRunProcessInfo() {
-        return processes.values().stream().toList();
+    public List<RunProcessInfo> getAllRunProcessInfoForUsername(String username) {
+        return processes.values().stream().filter(runProcessInfo -> runProcessInfo.getUsername().equalsIgnoreCase(username)).toList();
     }
 
     private String createRunProcessId(String username, String timeOfRun, String sessionId) {
