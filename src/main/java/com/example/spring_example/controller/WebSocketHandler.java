@@ -3,9 +3,11 @@ package com.example.spring_example.controller;
 import com.example.spring_example.config.AppConfig;
 import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.entity.AppUser;
+import com.example.spring_example.models.BasicPara;
 import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.models.MhdPara;
 import com.example.spring_example.security.JwtUtil;
+import com.example.spring_example.service.ProcessManager;
 import com.example.spring_example.service.UserService;
 import com.example.spring_example.service.run.HydroRunService;
 import com.example.spring_example.service.run.MhdRunService;
@@ -28,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private Process currentProcess;
     private volatile boolean running = false;
     private Map<String,Object> payloadObject;
     private WebSocketSession currentSession;
@@ -37,6 +38,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
     HydroRunService hydroRunService;
     @Autowired
     MhdRunService mhdRunService;
+
+    @Autowired
+    ProcessManager processManager;
 
     @Autowired
     JwtUtil jwtUtil;
@@ -50,6 +54,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
     String currentUserName;
 
     Long currentRunId = -1L;
+
+    String timeOfRun = "";
+
+    String dimension = "";
+    String resolution = "";
+
+    String processInfoId = "";
 
 
     @Override
@@ -69,8 +80,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         if("stop".equals(payload.trim()))
         {
             stopRun(currentSession);
-            markRunStopped();
-
         }
         else if("Token:".equals(payload.trim().substring(0,6))) {
             System.out.println("Token received.");
@@ -90,7 +99,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 payloadObject = mapper.readValue(payload,new TypeReference<Map<String,Object>>() {});
                 System.out.println("Payload object is: " + payloadObject.toString());
                 kind = (String) payloadObject.get("kind");
-
+                timeOfRun =  BasicPara.getTimeStamp();
                 handleRun();
 
             } catch (Exception e) {
@@ -102,70 +111,38 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        System.out.println("Websocket connection closed.");
         running = false;
-        if(currentProcess != null && currentProcess.isAlive()) {
-            currentProcess.destroy();
-        }
+        processManager.stopProcess(processInfoId);
     }
 
     public void stopRun(WebSocketSession session) throws InterruptedException, IOException {
-        if(!running) {
+        if(processManager.checkProcessCompletion(processInfoId)) {
+            session.sendMessage(new TextMessage("Run has already completed"));
             return;
         }
 
-        session.sendMessage(new TextMessage("Process has been stopped"));
+        running = false;
+        processManager.stopProcess(processInfoId);
+        session.sendMessage(new TextMessage("Run has been stopped"));
         session.close();
-        if(currentProcess != null && currentProcess.isAlive()) {
-            currentProcess.destroy();
-            if (!currentProcess.waitFor(1, java.util.concurrent.TimeUnit.SECONDS)) {
-                currentProcess.destroyForcibly();
-            }
-
-            running = false;
-
-            session.sendMessage(new TextMessage("The process has been killed."));
-            System.out.print("Process stopped by the client");
-
-        }
 
     }
 
     public void handleRun() throws IOException {
-        System.out.println("Inside handle run");
         try {
 
             if(kind.equals("HYDRO")) {
-                System.out.println("Creating hydro para file");
                 createHydroParaFile();
             } else if(kind.equals("MHD")) {
                 createMhdParaFile();
             }
 
-            ProcessBuilder builder = new ProcessBuilder(
-                    SimulationConfig.getPythonPath(),
-                    SimulationConfig.getScriptPath()
-            );
-            builder.redirectErrorStream(true);
-            currentProcess = builder.start();
-            running = true;
 
-            new Thread(() -> {
-                try(BufferedReader reader = new BufferedReader(new InputStreamReader(currentProcess.getInputStream()))) {
-                    String line;
-                    while( running && (line = reader.readLine()) != null && currentSession.isOpen()) {
-                        currentSession.sendMessage(new TextMessage(line));
-                        if(line.trim().equalsIgnoreCase("Done")){
-                            markRunCompleted();
-                        }
-                    }
-                } catch (IOException e) {
-                    try {
-                        currentSession.sendMessage(new TextMessage("Error sending process output: " + e.getMessage()));
-                    } catch (IOException ignored) {}
-                }
-            }).start();
-
+            processInfoId = processManager.startProcess(currentUserName,timeOfRun, currentSession.getId(), kind,dimension,resolution,currentRunId);
+            if(processInfoId == null) {
+                currentSession.sendMessage(new TextMessage("An Unknown Error occured."));
+            }
+            processManager.sendOutputToClient(processInfoId,currentSession);
 
         } catch (Exception e) {
             currentSession.sendMessage(new TextMessage("Invalid input format: " + e.getMessage()));
@@ -190,12 +167,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
             hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
             hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
             hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-            hydroPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"Hydro Runs",HydroPara.getTimeStamp()).toString().replace("\\","/"));
+            hydroPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"Hydro Runs",timeOfRun).toString().replace("\\","/"));
             currentRunId = hydroRunService.createNewRun(hydroPara,currentUserName);
             if(currentRunId == -1) {
                 currentSession.sendMessage(new TextMessage("An error occurred."));
                 currentSession.close();
             }
+
+            dimension = String.valueOf(hydroPara.getDimension());
+            resolution = hydroPara.getNx() + "x" + hydroPara.getNx() + "x" + hydroPara.getNz();
+
             hydroPara.createParaFile(currentSession.getId());
         } catch (Exception e) {
             System.out.print("Error creating para file: " + e.getMessage());
@@ -217,13 +198,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
         mhdPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
         mhdPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
         mhdPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-        mhdPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"MHD Runs",MhdPara.getTimeStamp()).toString().replace("\\","/"));
+        mhdPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"MHD Runs",timeOfRun).toString().replace("\\","/"));
 
         currentRunId =  mhdRunService.createNewRun(mhdPara,currentUserName);
         if(currentRunId == -1) {
             currentSession.sendMessage(new TextMessage("An error occurred."));
             currentSession.close();
         }
+
+        dimension = String.valueOf(mhdPara.getDimension());
+        resolution = mhdPara.getNx() + "x" + mhdPara.getNx() + "x" + mhdPara.getNz();
         System.out.println("Trying to create para file");
         try {
             mhdPara.createParaFile(currentSession.getId());
@@ -256,33 +240,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     }
 
-
-    private void markRunCompleted() throws IOException {
-        running = false;
-        if(currentRunId == -1L) {
-            return;
-        }
-        if(kind.equalsIgnoreCase("hydro")) {
-            hydroRunService.markRunCompleted(currentRunId);
-        } else if(kind.equalsIgnoreCase("mhd")) {
-            mhdRunService.markRunCompleted(currentRunId);
-        }
-        currentSession.close();
-
-    }
-
-
-    private void markRunStopped() {
-        if(currentRunId == -1L) {
-            return;
-        }
-
-        if(kind.equalsIgnoreCase("hydro")) {
-            hydroRunService.markRunStopped(currentRunId);
-        } else if(kind.equalsIgnoreCase("mhd")) {
-            mhdRunService.markRunStopped(currentRunId);
-        }
-    }
 }
 
 
