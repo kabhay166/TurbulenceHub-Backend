@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -154,6 +155,10 @@ public class ProcessManager {
         } else if(runProcessInfo.getKind().equalsIgnoreCase("mhd")) {
             mhdRunService.markRunStopped(runProcessInfo.getRunId());
         }
+    }
+
+    public List<RunProcessInfo> getAllRunProcessInfo() {
+        return processes.values().stream().toList();
     }
 
     private String createRunProcessId(String username, String timeOfRun, String sessionId) {
