@@ -111,8 +111,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        currentSession.close();
         running = false;
-        processManager.stopProcess(processInfoId);
     }
 
     public void stopRun(WebSocketSession session) throws InterruptedException, IOException {

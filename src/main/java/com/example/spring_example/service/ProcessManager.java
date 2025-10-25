@@ -76,6 +76,9 @@ public class ProcessManager {
                     processes.remove(runProcessInfo.getProcessInfoId());
                 }
             }
+
+            markRunCompleted(runProcessInfo.getProcessInfoId());
+            processes.remove(runProcessInfo.getProcessInfoId());
         } catch (IOException e) {
             System.out.println("Error occured while capturing output: " + e.getMessage());
         }
@@ -127,6 +130,7 @@ public class ProcessManager {
                 if(session.isOpen()) {
                     session.sendMessage(new TextMessage(line));
                 } else {
+                    System.out.println("Session is closed so stopping sending output");
                     break;
                 }
             }
@@ -137,6 +141,9 @@ public class ProcessManager {
 
     private void markRunCompleted(String runProcessInfoId) throws IOException {
         RunProcessInfo runProcessInfo = this.processes.get(runProcessInfoId);
+        if(runProcessInfo == null) {
+            return;
+        }
         if(runProcessInfo.getKind().equalsIgnoreCase("hydro")) {
             hydroRunService.markRunCompleted(runProcessInfo.getRunId());
         } else if(runProcessInfo.getKind().equalsIgnoreCase("mhd")) {
@@ -148,7 +155,7 @@ public class ProcessManager {
 
     private void markRunStopped(String runProcessInfoId) {
         RunProcessInfo runProcessInfo = this.processes.get(runProcessInfoId);
-
+        if(runProcessInfo == null) {return;}
         if(runProcessInfo.getKind().equalsIgnoreCase("hydro")) {
             hydroRunService.markRunStopped(runProcessInfo.getRunId());
         } else if(runProcessInfo.getKind().equalsIgnoreCase("mhd")) {
