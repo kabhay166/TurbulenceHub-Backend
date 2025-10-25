@@ -7,6 +7,10 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Collectors;
+
 @Service
 public class EmailService {
     @Autowired
@@ -49,5 +53,30 @@ public class EmailService {
         passwordRestMail.setSubject(subject);
         passwordRestMail.setText(message);
         mailSender.send(passwordRestMail);
+    }
+
+
+    @Async
+    public void sendRunCompletedEmail(String username, String to, String kind, String dimension, String resolution,String timeOfRun) {
+        String subject = "Your run has completed";
+        String date = Arrays.stream(timeOfRun.split("_")).limit(3).collect(
+                Collectors.collectingAndThen(Collectors.toList(),list -> {
+                    Collections.reverse(list);
+                    return String.join("-",list);
+                }));
+        String time = Arrays.stream(timeOfRun.split("_")).skip(3).collect(Collectors.joining(":"));
+        String message = "Hi, " + username + ".\n"
+                + "Your " + kind + " run has successfully finished. Below are run details for your reference.\n" +
+                "Kind: " + kind + "\n" +
+                "Dimension: " + dimension + "\n" +
+                "Resolution: " + resolution + "\n" +
+                "Time of run: " + time + "\n" +
+                "Date of run: " + date + "\n";
+        SimpleMailMessage runCompletedMail = new SimpleMailMessage();
+        runCompletedMail.setFrom(AppConfig.getCompanyEmail());
+        runCompletedMail.setTo(to);
+        runCompletedMail.setSubject(subject);
+        runCompletedMail.setText(message);
+        mailSender.send(runCompletedMail);
     }
 }

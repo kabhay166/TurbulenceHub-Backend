@@ -175,7 +175,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             }
 
             dimension = String.valueOf(hydroPara.getDimension());
-            resolution = hydroPara.getNx() + "x" + hydroPara.getNx() + "x" + hydroPara.getNz();
+            resolution = hydroPara.getNx() + "x" + hydroPara.getNy() + "x" + hydroPara.getNz();
 
             hydroPara.createParaFile(currentSession.getId());
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         }
 
         dimension = String.valueOf(mhdPara.getDimension());
-        resolution = mhdPara.getNx() + "x" + mhdPara.getNx() + "x" + mhdPara.getNz();
+        resolution = mhdPara.getNx() + "x" + mhdPara.getNy() + "x" + mhdPara.getNz();
         System.out.println("Trying to create para file");
         try {
             mhdPara.createParaFile(currentSession.getId());

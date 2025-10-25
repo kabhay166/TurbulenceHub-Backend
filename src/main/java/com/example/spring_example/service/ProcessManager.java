@@ -3,9 +3,11 @@ package com.example.spring_example.service;
 
 import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.entity.RunProcessInfo;
+import com.example.spring_example.events.RunCompletedEvent;
 import com.example.spring_example.service.run.HydroRunService;
 import com.example.spring_example.service.run.MhdRunService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -23,10 +25,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ProcessManager {
 
     @Autowired
-    HydroRunService hydroRunService;
+    private HydroRunService hydroRunService;
 
     @Autowired
-    MhdRunService mhdRunService;
+    private MhdRunService mhdRunService;
+
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private  final Map<String, RunProcessInfo> processes = new HashMap<>();
     private  final Map<String,BlockingQueue<String>> processOutputQueue = new HashMap<>();
@@ -72,6 +77,14 @@ public class ProcessManager {
                 }
                 if(line.trim().equalsIgnoreCase("Done")){
                     runProcessInfo.setCompleted(true);
+                    RunCompletedEvent event = RunCompletedEvent.builder()
+                            .username(runProcessInfo.getUsername())
+                            .kind(runProcessInfo.getKind())
+                            .dimension(runProcessInfo.getDimension())
+                            .resolution(runProcessInfo.getResolution())
+                            .timeOfRun(runProcessInfo.getTimeOfRun())
+                            .build();
+                    applicationEventPublisher.publishEvent(event);
                     markRunCompleted(runProcessInfo.getProcessInfoId());
                     processes.remove(runProcessInfo.getProcessInfoId());
                 }
