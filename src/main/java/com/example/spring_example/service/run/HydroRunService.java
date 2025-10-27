@@ -7,6 +7,7 @@ import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.repository.UserRepository;
 import com.example.spring_example.repository.run.HydroRunRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -64,5 +65,14 @@ public class HydroRunService {
 
     public List<HydroRun> getAllRunsByUser(Long userId) {
         return hydroRunRepository.findAll().stream().filter(run -> Objects.equals(run.getAppUser().getId(), userId)).toList();
+    }
+
+    public List<HydroRun> getAllCompletedRunsByUser(Long userId) {
+        return hydroRunRepository.findAll().stream().filter(run -> Objects.equals(run.getAppUser().getId(),userId)).
+                filter(run -> run.getCompleted() == true).toList();
+    }
+
+    public List<HydroRun> getLatestRunsByUser(Long userId) {
+        return hydroRunRepository.findByUserIdOrderByTimeOfRunDesc(userId, PageRequest.of(0,10));
     }
 }
