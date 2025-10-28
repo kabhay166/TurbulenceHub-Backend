@@ -6,12 +6,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.ZonedDateTime;
+
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CompletedRunResponseDto {
+
     @NotBlank
-    public String a;
+    public Long id;
+    @NotBlank
+    public String kind;
+    @NotBlank
+    public int dimension;
+    @NotBlank
+    public String resolution;
+    @NotBlank
+    public ZonedDateTime timeOfRun;
+
 
 }

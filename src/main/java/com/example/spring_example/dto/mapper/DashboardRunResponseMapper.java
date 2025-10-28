@@ -7,7 +7,7 @@ import com.example.spring_example.entity.run.MhdRun;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DashboardRunMapper {
+public class DashboardRunResponseMapper {
 
     public static List<DashboardRunResponseDto> convertHydroRunsToDashboardDtos(List<HydroRun> hydroRuns) {
         List<DashboardRunResponseDto> dashboardRunResponseDtos = new ArrayList<>();
