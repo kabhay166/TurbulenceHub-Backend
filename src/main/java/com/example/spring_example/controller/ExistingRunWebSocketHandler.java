@@ -5,6 +5,7 @@ import com.example.spring_example.security.JwtUtil;
 import com.example.spring_example.service.ProcessManager;
 import com.example.spring_example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 
 @Component
+@Scope("prototype")
 public class ExistingRunWebSocketHandler extends TextWebSocketHandler {
 
     private volatile boolean running = false;

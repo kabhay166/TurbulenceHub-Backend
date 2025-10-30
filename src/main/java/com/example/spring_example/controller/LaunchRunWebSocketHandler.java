@@ -1,7 +1,6 @@
 package com.example.spring_example.controller;
 
 import com.example.spring_example.config.AppConfig;
-import com.example.spring_example.config.SimulationConfig;
 import com.example.spring_example.entity.AppUser;
 import com.example.spring_example.models.BasicPara;
 import com.example.spring_example.models.HydroPara;
@@ -13,6 +12,7 @@ import com.example.spring_example.service.run.HydroRunService;
 import com.example.spring_example.service.run.MhdRunService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -27,8 +27,10 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
+
 @Component
-public class WebSocketHandler extends TextWebSocketHandler {
+@Scope("prototype")
+public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
 
     private volatile boolean running = false;
     private Map<String,Object> payloadObject;
@@ -241,5 +243,4 @@ public class WebSocketHandler extends TextWebSocketHandler {
     }
 
 }
-
 
