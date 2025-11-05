@@ -2,6 +2,7 @@ package com.example.spring_example.service.run;
 
 import com.example.spring_example.dto.mapper.HydroRunMapper;
 import com.example.spring_example.entity.AppUser;
+import com.example.spring_example.entity.run.BasicRun;
 import com.example.spring_example.entity.run.HydroRun;
 import com.example.spring_example.models.HydroPara;
 import com.example.spring_example.repository.UserRepository;
@@ -25,7 +26,7 @@ public class HydroRunService {
     }
 
     @Transactional
-    public Long createNewRun(HydroPara hydroPara, String username) {
+    public Long createNewRun(HydroPara hydroPara, String username,ZonedDateTime timeOfRun,String timeOfRunPath) {
         Optional<AppUser> user = userRepository.findByUsername(username);
         if(user.isEmpty()) {
             return -1L;
@@ -34,11 +35,16 @@ public class HydroRunService {
         HydroRunMapper.convertHydroParaToHydroRun(hydroPara,hydroRun);
         hydroRun.setAppUser(user.get());
         hydroRun.setCompleted(false);
-        hydroRun.setTimeOfRun(ZonedDateTime.now());
+        hydroRun.setTimeOfRun(timeOfRun);
+        hydroRun.setTimeOfRunPath(timeOfRunPath);
         hydroRunRepository.save(hydroRun);
         user.get().addHydroRun(hydroRun);
         userRepository.save(user.get());
         return hydroRun.getId();
+    }
+
+    public Optional<HydroRun> findById(Long id) {
+        return hydroRunRepository.findById(id);
     }
 
     public void markRunCompleted(Long id) {

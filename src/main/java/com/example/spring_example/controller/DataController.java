@@ -1,11 +1,12 @@
 package com.example.spring_example.controller;
-import com.example.spring_example.entity.data.BaseData;
 import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.entity.data.HydroData;
 import com.example.spring_example.entity.data.MhdData;
+import com.example.spring_example.entity.data.RbcData;
 import com.example.spring_example.service.data.EulerDataService;
 import com.example.spring_example.service.data.HydroDataService;
 import com.example.spring_example.service.data.MhdDataService;
+import com.example.spring_example.service.data.RbcDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
@@ -35,6 +36,9 @@ public class DataController {
     @Autowired
     private MhdDataService mhdDataService;
 
+    @Autowired
+    private RbcDataService rbcDataService;
+
     @GetMapping("/euler")
     public ResponseEntity<List<EulerData>> getEulerData() {
         List<EulerData> eulerDataList =  eulerDataService.getAll();
@@ -51,6 +55,12 @@ public class DataController {
     public ResponseEntity<List<MhdData>> getMhdData() {
         List<MhdData> mhdDataList =  mhdDataService.getAll();
         return ResponseEntity.ok().body(mhdDataList);
+    }
+
+    @GetMapping("/rbc")
+    public ResponseEntity<List<RbcData>> getRbcData() {
+        List<RbcData> rbcDataList =  rbcDataService.getAll();
+        return ResponseEntity.ok().body(rbcDataList);
     }
 
     @GetMapping("/download/{model}/{id}")
@@ -70,6 +80,11 @@ public class DataController {
             Optional<MhdData> mhdData = mhdDataService.getById(id);
             if(mhdData.isPresent()) {
                 downloadPath = mhdData.get().getDownloadPath();
+            }
+        } else if(model.equalsIgnoreCase("RBC")) {
+            Optional<RbcData> rbcData = rbcDataService.getById(id);
+            if(rbcData.isPresent()) {
+                downloadPath = rbcData.get().getDownloadPath();
             }
         }
 

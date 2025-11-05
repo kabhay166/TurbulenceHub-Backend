@@ -45,7 +45,7 @@ public class ProcessManager {
             String runProcessId = createRunProcessId(username,timeOfRun,sessionId);
             ProcessBuilder builder = new ProcessBuilder(
                     SimulationConfig.getPythonPath(),
-                    SimulationConfig.getScriptPath()
+                    SimulationConfig.getTarangScriptPath()
             );
             builder.redirectErrorStream(true);
             Process newProcess = builder.start();

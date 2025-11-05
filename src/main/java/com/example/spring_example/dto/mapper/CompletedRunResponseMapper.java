@@ -18,10 +18,11 @@ public class CompletedRunResponseMapper {
             completedRunResponseDto.setKind("Hydro");
             completedRunResponseDto.setDimension(hydroRun.getDimension());
             completedRunResponseDto.setTimeOfRun(hydroRun.getTimeOfRun());
-
+            completedRunResponseDto.setDt(hydroRun.getDt());
             String resolution = hydroRun.getNx() + "x" + hydroRun.getNy() + "x" + hydroRun.getNz();
             completedRunResponseDto.setResolution(resolution);
-
+            completedRunResponseDto.setTime_scheme(hydroRun.getTimeScheme());
+            completedRunResponseDto.setFIXED_DT(hydroRun.isFixedDt());
             completedRuns.add(completedRunResponseDto);
         }
 

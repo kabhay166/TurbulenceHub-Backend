@@ -4,6 +4,7 @@ package com.example.spring_example.entity.run;
 import com.example.spring_example.entity.BasicEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +38,8 @@ public class BasicRun {
     private double tFinal;
     private double dt;
     private boolean fixedDt;
+    @NotNull
+    private String timeOfRunPath;
 
     @NotNull
     private boolean inputSetCase;

@@ -5,7 +5,7 @@ import com.example.spring_example.config.AppConfig;
 import lombok.Getter;
 import lombok.Setter;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Getter
@@ -28,7 +28,7 @@ public class BasicPara {
     private double t_final;
     private double dt;
     private boolean FIXED_DT = true;
-    private String output_dir = Paths.get(AppConfig.getBaseOutputPath(),getTimeStamp()).toString().replace("\\","/");
+    private String output_dir;
     private boolean INPUT_SET_CASE = true;
     private String input_case = "custom";
     private boolean INPUT_FROM_FILE = false;
@@ -50,7 +50,7 @@ public class BasicPara {
     private boolean SAVE_VECPOT = false;
     private int[][] modes_save = new int[0][0];
     private int iter_field_save_start = 0;
-    private int iter_field_save_inter = 1000;
+    private int iter_field_save_inter = 10;
     private int iter_glob_energy_print_start = 0;
     private int iter_glob_energy_print_inter = 1;
     private int iter_ekTk_save_start = 0;
@@ -111,9 +111,9 @@ public class BasicPara {
 
 
 
-    public static String getTimeStamp() {
+    public static String getTimeStamp(ZonedDateTime timeOfRun) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
-        String timestamp = LocalDateTime.now().format(formatter);
+        String timestamp = timeOfRun.format(formatter);
         return Paths.get("", timestamp).toString();
     }
 }

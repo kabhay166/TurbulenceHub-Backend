@@ -16,7 +16,7 @@ public class SimulationConfig {
         }
     }
 
-    public static String getScriptPath() {
+    public static String getTarangScriptPath() {
         switch (PROFILE) {
             case DEV:
                 return "C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\TurbulenceHUB\\backend\\Tarang\\tarang_gui.py";
@@ -24,6 +24,19 @@ public class SimulationConfig {
                 return "/home/vimal/Tarang/tarang_gui.py";
             default:
                 throw new IllegalStateException("Unknown profile: " + PROFILE);
+        }
+    }
+
+    public static String getAnalyzeScriptPath() {
+        switch(PROFILE) {
+            case DEV:
+                return "C:\\Users\\kabha\\OneDrive\\Desktop\\Programming\\Vayusoft_Labs\\Tarang_Full\\Tarang\\post_proc\\post_proc.py";
+
+            case PROD:
+                return "/home/vimal/Tarang/post_proc/post_proc.py";
+
+            default:
+                throw new IllegalStateException("Unknow profile: " + PROFILE);
         }
     }
 }

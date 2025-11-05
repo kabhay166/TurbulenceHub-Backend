@@ -21,6 +21,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,7 +58,9 @@ public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
 
     Long currentRunId = -1L;
 
-    String timeOfRun = "";
+    String timeOfRunPath = "";
+
+    ZonedDateTime timeOfRun;
 
     String dimension = "";
     String resolution = "";
@@ -101,7 +104,10 @@ public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
                 payloadObject = mapper.readValue(payload,new TypeReference<Map<String,Object>>() {});
                 System.out.println("Payload object is: " + payloadObject.toString());
                 kind = (String) payloadObject.get("kind");
-                timeOfRun =  BasicPara.getTimeStamp();
+                timeOfRun = ZonedDateTime.now();
+                System.out.println("Time of run creation is: "  + timeOfRun);
+                timeOfRunPath =  BasicPara.getTimeStamp(timeOfRun);
+                System.out.println("Time of run path is: " + timeOfRunPath);
                 handleRun();
 
             } catch (Exception e) {
@@ -140,7 +146,7 @@ public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
             }
 
 
-            processInfoId = processManager.startProcess(currentUserName,timeOfRun, currentSession.getId(), kind,dimension,resolution,currentRunId);
+            processInfoId = processManager.startProcess(currentUserName, String.valueOf(timeOfRun), currentSession.getId(), kind,dimension,resolution,currentRunId);
             if(processInfoId == null) {
                 currentSession.sendMessage(new TextMessage("An Unknown Error occured."));
             }
@@ -169,8 +175,8 @@ public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
             hydroPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
             hydroPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
             hydroPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-            hydroPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"Hydro Runs",timeOfRun).toString().replace("\\","/"));
-            currentRunId = hydroRunService.createNewRun(hydroPara,currentUserName);
+            hydroPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"Hydro Runs",timeOfRunPath).toString().replace("\\","/"));
+            currentRunId = hydroRunService.createNewRun(hydroPara,currentUserName,timeOfRun,timeOfRunPath);
             if(currentRunId == -1) {
                 currentSession.sendMessage(new TextMessage("An error occurred."));
                 currentSession.close();
@@ -200,9 +206,9 @@ public class LaunchRunWebSocketHandler extends TextWebSocketHandler {
         mhdPara.setT_initial(Double.parseDouble(payloadObject.get("t_initial").toString()));
         mhdPara.setT_final(Double.parseDouble(payloadObject.get("t_final").toString()));
         mhdPara.setDt(Double.parseDouble(payloadObject.get("dt").toString()));
-        mhdPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"MHD Runs",timeOfRun).toString().replace("\\","/"));
+        mhdPara.setOutput_dir(Paths.get(AppConfig.getBaseOutputPath(),currentUserName,"MHD Runs",timeOfRunPath).toString().replace("\\","/"));
 
-        currentRunId =  mhdRunService.createNewRun(mhdPara,currentUserName);
+        currentRunId =  mhdRunService.createNewRun(mhdPara,currentUserName,timeOfRun,timeOfRunPath);
         if(currentRunId == -1) {
             currentSession.sendMessage(new TextMessage("An error occurred."));
             currentSession.close();

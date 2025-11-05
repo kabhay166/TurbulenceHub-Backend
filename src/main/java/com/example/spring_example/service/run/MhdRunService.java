@@ -25,7 +25,7 @@ public class MhdRunService {
     }
 
     @Transactional
-    public Long createNewRun(MhdPara mhdPara, String username) {
+    public Long createNewRun(MhdPara mhdPara, String username,ZonedDateTime timeOfRun,String timeOfRunPath) {
         Optional<AppUser> user = userRepository.findByUsername(username);
         if(user.isEmpty()) {
             return -1L;
@@ -34,11 +34,16 @@ public class MhdRunService {
         MhdRunMapper.convertMhdParaToMhdRun(mhdPara,mhdRun);
         mhdRun.setAppUser(user.get());
         mhdRun.setCompleted(false);
-        mhdRun.setTimeOfRun(ZonedDateTime.now());
+        mhdRun.setTimeOfRun(timeOfRun);
+        mhdRun.setTimeOfRunPath(timeOfRunPath);
         mhdRunRepository.save(mhdRun);
         user.get().addMhdRun(mhdRun);
         userRepository.save(user.get());
         return mhdRun.getId();
+    }
+
+    public Optional<MhdRun> findById(Long id) {
+        return mhdRunRepository.findById(id);
     }
 
     public void markRunCompleted(Long id) {
