@@ -17,6 +17,8 @@ public class UserResponseDto {
     @NotBlank
     public String email;
     @NotBlank
+    public String role;
+    @NotBlank
     public String token;
     public String error;
     public boolean showOTPPage;

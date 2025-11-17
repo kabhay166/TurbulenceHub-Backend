@@ -12,5 +12,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RbcData extends BaseData {
-    private int rayleighNumber;
+    private double rayleighNumber;
+    private double prandtlNumber;
 }

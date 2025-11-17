@@ -77,7 +77,7 @@ public class UserController {
 
 
         if(user.isEmpty()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect credentials provided. No user with username: " + username,false));
+            return ResponseEntity.badRequest().body(new UserResponseDto("","","","","Incorrect credentials provided. No user with username: " + username,false));
         }
 
         if (!user.get().isVerified()) {
@@ -92,7 +92,7 @@ public class UserController {
 
             }
 
-            return ResponseEntity.badRequest().body(new UserResponseDto("", "", "", "Please Verify your email first. A verification link has been sent to your mail.",false));
+            return ResponseEntity.badRequest().body(new UserResponseDto("", "", "", "", "Please Verify your email first. A verification link has been sent to your mail.",false));
         }
 
         if(incomingOtp == null) {
@@ -100,12 +100,12 @@ public class UserController {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(username,password)
                 );
-                UserResponseDto userResponseDto = new UserResponseDto(username,"","","",true);
+                UserResponseDto userResponseDto = new UserResponseDto(username,"","","","",true);
                 String otp = userService.generateOTP(user.get());
                 emailService.sendOTPMail(user.get().getEmail(),otp);
                 return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
             } catch(Exception e) {
-                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Invalid Credentials provided",false));
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","","Invalid Credentials provided",false));
             }
 
         } else {
@@ -116,14 +116,14 @@ public class UserController {
                     authenticationManager.authenticate(
                             new UsernamePasswordAuthenticationToken(username,password)
                     );
-                    String token = jwtUtil.generateToken(username);
-                    UserResponseDto userResponseDto = new UserResponseDto(username,"",token,"",false);
+                    String token = jwtUtil.generateToken(username,user.get().getRoles().get(0));
+                    UserResponseDto userResponseDto = new UserResponseDto(username,"",user.get().getRoles().get(0),token,"",false);
                     return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
                 } catch(Exception e) {
-                    return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect credentials provided.",false));
+                    return ResponseEntity.badRequest().body(new UserResponseDto("","","","","Incorrect credentials provided.",false));
                 }
             } else {
-                return ResponseEntity.badRequest().body(new UserResponseDto("","","","Incorrect otp or expired",true));
+                return ResponseEntity.badRequest().body(new UserResponseDto("","","","","Incorrect otp or expired",true));
 
             }
         }
@@ -143,18 +143,18 @@ public class UserController {
         String password = userSignupDetails.getPassword();
         String confirmPassword = userSignupDetails.getConfirmPassword();
         if(!password.equals(confirmPassword)) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","The passwords do not match",false));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","","The passwords do not match",false));
         }
 
         Optional<AppUser> existingUser = userService.findByUsername(username);
 
         if(existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Username " + username + " is already taken.",false));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","","Username " + username + " is already taken.",false));
         }
 
         existingUser = userService.findByEmail(email);
         if(existingUser.isPresent()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","User with email: " + email + " already exists.",false));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","","User with email: " + email + " already exists.",false));
         }
 
 
@@ -164,14 +164,14 @@ public class UserController {
         Optional<AppUser>  user = userService.findByUsername(username);
 
         if(user.isEmpty()) {
-            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","Error creating the user.",false));
+            return ResponseEntity.badRequest().body(new UserResponseDto(username,email,"","","Error creating the user.",false));
         }
 
         VerificationToken verificationToken = new VerificationToken(user.get());
         tokenRepository.save(verificationToken);
 
         emailService.sendVerificationEmail(email,verificationToken.getToken());
-        UserResponseDto userSignupResponseDto = new UserResponseDto(username,email,"","",false);
+        UserResponseDto userSignupResponseDto = new UserResponseDto(username,email,"","","",false);
 
         return new ResponseEntity<>(userSignupResponseDto, HttpStatus.CREATED);
     }

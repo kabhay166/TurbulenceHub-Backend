@@ -1,6 +1,9 @@
 package com.example.spring_example.service.data;
 
 
+import com.example.spring_example.dto.mapper.DataUploadDtoMapper;
+import com.example.spring_example.dto.request.DataUploadDto;
+import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.entity.data.HydroData;
 import com.example.spring_example.entity.data.MhdData;
 import com.example.spring_example.repository.data.HydroDataRepository;
@@ -23,6 +26,15 @@ public class HydroDataService {
         return hydroDataRepository.findById(id);
     }
 
+    public boolean addData(DataUploadDto dataUploadDto) {
+        try {
+            HydroData hydroData = DataUploadDtoMapper.mapToHydroData(dataUploadDto);
+            hydroDataRepository.save(hydroData);
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
 
+    }
 
 }

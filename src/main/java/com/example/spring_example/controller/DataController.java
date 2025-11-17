@@ -1,12 +1,13 @@
 package com.example.spring_example.controller;
+import com.example.spring_example.dto.mapper.DataUploadDtoMapper;
+import com.example.spring_example.dto.request.DataUploadDto;
+import com.example.spring_example.entity.AppUser;
 import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.entity.data.HydroData;
 import com.example.spring_example.entity.data.MhdData;
 import com.example.spring_example.entity.data.RbcData;
-import com.example.spring_example.service.data.EulerDataService;
-import com.example.spring_example.service.data.HydroDataService;
-import com.example.spring_example.service.data.MhdDataService;
-import com.example.spring_example.service.data.RbcDataService;
+import com.example.spring_example.service.UserService;
+import com.example.spring_example.service.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -39,10 +41,21 @@ public class DataController {
     @Autowired
     private RbcDataService rbcDataService;
 
+    @Autowired
+    private MiscellaneousDataService miscellaneousDataService;
+
+    @Autowired
+    UserService userService;
+
     @GetMapping("/euler")
-    public ResponseEntity<List<EulerData>> getEulerData() {
-        List<EulerData> eulerDataList =  eulerDataService.getAll();
-        return ResponseEntity.ok().body(eulerDataList);
+    public ResponseEntity<?> getEulerData() {
+        System.out.println("Finding euler data.");
+        try {
+            List<EulerData> eulerDataList = eulerDataService.getAll();
+            return ResponseEntity.ok().body(eulerDataList);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(new String("Error occurred: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/hydro")
@@ -58,9 +71,53 @@ public class DataController {
     }
 
     @GetMapping("/rbc")
-    public ResponseEntity<List<RbcData>> getRbcData() {
-        List<RbcData> rbcDataList =  rbcDataService.getAll();
-        return ResponseEntity.ok().body(rbcDataList);
+    public ResponseEntity<?> getRbcData() {
+        try {
+            List<RbcData> rbcDataList =  rbcDataService.getAll();
+            return ResponseEntity.ok().body(rbcDataList);
+        } catch(Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred on the server.");
+        }
+
+    }
+
+
+    @PostMapping("/add-data")
+    public ResponseEntity<String> uploadData(@RequestBody DataUploadDto dataUploadDto) {
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<AppUser> user = userService.findByUsername(username);
+
+        if(user.isEmpty()) {
+            return ResponseEntity.badRequest().body("User with " + username + " does not exist.");
+        }
+
+        String role = user.get().getRoles().get(0);
+        if(!role.equalsIgnoreCase("admin")) {
+            return ResponseEntity.badRequest().body("You do not have the permission to upload data.");
+        }
+
+        String kind = dataUploadDto.getKind();
+        boolean success = false;
+        if(kind.equalsIgnoreCase("euler")) {
+
+            success = eulerDataService.addData(dataUploadDto);
+        } else if(kind.equalsIgnoreCase("hydro")) {
+            success =  hydroDataService.addData(dataUploadDto);
+        } else if(kind.equalsIgnoreCase("mhd")) {
+            success =  mhdDataService.addData(dataUploadDto);
+        } else if(kind.equalsIgnoreCase("rbc")) {
+            success =  rbcDataService.addData(dataUploadDto);
+        } else if(kind.equalsIgnoreCase("miscellaneous")) {
+            success = miscellaneousDataService.addData(dataUploadDto);
+        }
+
+        if(success) {
+            return ResponseEntity.ok().body("Data added successfully.");
+        } else {
+            return ResponseEntity.badRequest().body("Error occurred while adding data");
+        }
+
     }
 
     @GetMapping("/download/{model}/{id}")

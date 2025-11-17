@@ -1,5 +1,7 @@
 package com.example.spring_example.service.data;
 
+import com.example.spring_example.dto.mapper.DataUploadDtoMapper;
+import com.example.spring_example.dto.request.DataUploadDto;
 import com.example.spring_example.entity.data.EulerData;
 import com.example.spring_example.repository.data.EulerDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +13,7 @@ import java.util.Optional;
 @Service
 public class EulerDataService {
 
-    @Autowired
-    public EulerDataRepository eulerDataRepository;
+    private final EulerDataRepository eulerDataRepository;
 
     public EulerDataService(EulerDataRepository eulerDataRepository) {
         this.eulerDataRepository = eulerDataRepository;
@@ -24,5 +25,16 @@ public class EulerDataService {
 
     public Optional<EulerData> getById(Long id) {
         return eulerDataRepository.findById(id);
+    }
+
+    public boolean addData(DataUploadDto dataUploadDto) {
+        try {
+            EulerData eulerData = DataUploadDtoMapper.mapToEulerData(dataUploadDto);
+            eulerDataRepository.save(eulerData);
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+
     }
 }

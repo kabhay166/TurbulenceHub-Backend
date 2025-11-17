@@ -25,6 +25,10 @@ public class JwtUtil {
         return extractClaim(token,Claims::getSubject);
     }
 
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
     public Date extractExpiration(String token) {
         return extractClaim(token,Claims::getExpiration);
     }
@@ -48,18 +52,19 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(String username) {
-        Map<String,Object> claims = new HashMap<>();
-        return createToken(claims,username);
+    public String generateToken(String username, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        return createToken(claims, username);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
-        Date expiryAt = new Date(now +  TimeUnit.DAYS.toMillis(1)); //TimeUnit.DAYS.toMillis(1));
-        return  Jwts.builder()
+        Date expiryAt = new Date(now + TimeUnit.DAYS.toMillis(1));
+
+        return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(issuedAt)

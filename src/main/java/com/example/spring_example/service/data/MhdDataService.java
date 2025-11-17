@@ -1,7 +1,10 @@
 package com.example.spring_example.service.data;
 
 
+import com.example.spring_example.dto.mapper.DataUploadDtoMapper;
+import com.example.spring_example.dto.request.DataUploadDto;
 import com.example.spring_example.entity.data.EulerData;
+import com.example.spring_example.entity.data.HydroData;
 import com.example.spring_example.entity.data.MhdData;
 import com.example.spring_example.repository.data.MhdDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,5 +25,16 @@ public class MhdDataService {
 
     public Optional<MhdData> getById(Long id) {
         return mhdDataRepository.findById(id);
+    }
+
+    public boolean addData(DataUploadDto dataUploadDto) {
+        try {
+            MhdData mhdData = DataUploadDtoMapper.mapToMhdData(dataUploadDto);
+            mhdDataRepository.save(mhdData);
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+
     }
 }
