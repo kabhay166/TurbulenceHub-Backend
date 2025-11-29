@@ -2,10 +2,7 @@ package com.example.spring_example.controller;
 import com.example.spring_example.dto.mapper.DataUploadDtoMapper;
 import com.example.spring_example.dto.request.DataUploadDto;
 import com.example.spring_example.entity.AppUser;
-import com.example.spring_example.entity.data.EulerData;
-import com.example.spring_example.entity.data.HydroData;
-import com.example.spring_example.entity.data.MhdData;
-import com.example.spring_example.entity.data.RbcData;
+import com.example.spring_example.entity.data.*;
 import com.example.spring_example.service.UserService;
 import com.example.spring_example.service.data.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +72,17 @@ public class DataController {
         try {
             List<RbcData> rbcDataList =  rbcDataService.getAll();
             return ResponseEntity.ok().body(rbcDataList);
+        } catch(Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred on the server.");
+        }
+
+    }
+
+    @GetMapping("/miscellaneous")
+    public ResponseEntity<?> getMiscellaneousData() {
+        try {
+            List<MiscellaneousData> miscellaneousDataList =  miscellaneousDataService.getAll();
+            return ResponseEntity.ok().body(miscellaneousDataList);
         } catch(Exception e) {
             return ResponseEntity.internalServerError().body("An error occurred on the server.");
         }
