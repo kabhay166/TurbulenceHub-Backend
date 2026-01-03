@@ -18,6 +18,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -30,10 +35,39 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Bean
+    UrlBasedCorsConfigurationSource configurationSource() {
+
+
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setExposedHeaders(Collections.singletonList("Content-Disposition"));
+
+//        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*")); // ✅ allow all
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Origin",
+                "Authorization",
+                "X-Requested-With",
+                "Content-Type",
+                "Accept",
+                "Client-Id",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "Assumed-Role"
+        ));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {}) // enable CORS from WebConfig
+                .cors((cors) -> cors
+                        .configurationSource(configurationSource())) // enable CORS from WebConfig
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",

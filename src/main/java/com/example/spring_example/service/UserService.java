@@ -66,6 +66,7 @@ public class UserService {
         if(storedOtp.equals(otp)) {
             user.setOtp(null);
             user.setOtpExpiryDate(null);
+            userRepository.save(user);
             return true;
         }
 
