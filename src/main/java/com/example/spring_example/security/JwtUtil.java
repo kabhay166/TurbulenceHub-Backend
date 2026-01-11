@@ -55,10 +55,25 @@ public class JwtUtil {
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
-        return createToken(claims, username);
+        return createAccessToken(claims, username);
     }
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    private String createAccessToken(Map<String, Object> claims, String subject) {
+        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiryAt = new Date(now + TimeUnit.MINUTES.toMillis(60));
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiryAt)
+                .signWith(key)
+                .compact();
+    }
+
+    private String createRefreshToken(Map<String, Object> claims, String subject) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
