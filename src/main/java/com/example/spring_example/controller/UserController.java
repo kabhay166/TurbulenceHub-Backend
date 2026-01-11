@@ -5,6 +5,7 @@ import com.example.spring_example.dto.response.UserResponseDto;
 import com.example.spring_example.entity.AppUser;
 import com.example.spring_example.entity.PasswordResetToken;
 import com.example.spring_example.entity.VerificationToken;
+import com.example.spring_example.enums.JwtTokenType;
 import com.example.spring_example.repository.PasswordResetTokenRepository;
 import com.example.spring_example.repository.VerificationTokenRepository;
 import com.example.spring_example.security.CustomUserDetailsService;
@@ -116,8 +117,9 @@ public class UserController {
                     authenticationManager.authenticate(
                             new UsernamePasswordAuthenticationToken(username,password)
                     );
-                    String token = jwtUtil.generateToken(username,user.get().getRoles().get(0));
-                    UserResponseDto userResponseDto = new UserResponseDto(username,"",user.get().getRoles().get(0),token,"",false);
+                    String accessToken = jwtUtil.generateToken(JwtTokenType.ACCESS_TOKEN,username,user.get().getRoles().get(0));
+                    String refreshToken = jwtUtil.generateToken(JwtTokenType.REFRESH_TOKEN,username,user.get().getRoles().get(0));
+                    UserResponseDto userResponseDto = new UserResponseDto(username,"",user.get().getRoles().get(0),accessToken,"",false);
                     return new ResponseEntity<>(userResponseDto,HttpStatus.OK);
                 } catch(Exception e) {
                     return ResponseEntity.badRequest().body(new UserResponseDto("","","","","Incorrect credentials provided.",false));

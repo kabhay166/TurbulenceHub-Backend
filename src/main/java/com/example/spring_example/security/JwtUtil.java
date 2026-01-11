@@ -1,10 +1,10 @@
 package com.example.spring_example.security;
 
+import com.example.spring_example.enums.JwtTokenType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -52,32 +52,24 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(JwtTokenType tokenType, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", role);
-        return createAccessToken(claims, username);
+        return createToken(tokenType,claims,username);
     }
 
-    private String createAccessToken(Map<String, Object> claims, String subject) {
+    private String createToken(JwtTokenType tokenType ,Map<String, Object> claims, String subject) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
-        Date expiryAt = new Date(now + TimeUnit.MINUTES.toMillis(60));
 
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(issuedAt)
-                .setExpiration(expiryAt)
-                .signWith(key)
-                .compact();
-    }
+        Date expiryAt = null;
 
-    private String createRefreshToken(Map<String, Object> claims, String subject) {
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-        long now = System.currentTimeMillis();
-        Date issuedAt = new Date(now);
-        Date expiryAt = new Date(now + TimeUnit.DAYS.toMillis(1));
+        if(tokenType == JwtTokenType.ACCESS_TOKEN) {
+           expiryAt = new Date(now + TimeUnit.MINUTES.toMillis(60));
+        } else {
+            expiryAt = new Date(now + TimeUnit.DAYS.toMillis(1));
+        }
 
         return Jwts.builder()
                 .setClaims(claims)
